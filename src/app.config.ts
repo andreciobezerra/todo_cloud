@@ -1,6 +1,6 @@
 import { ValidationPipeOptions } from "@nestjs/common";
 import type { ConfigModuleOptions } from "@nestjs/config";
-import Joi from "joi";
+import * as Joi from "joi";
 
 export const appConfig: ConfigModuleOptions = {
   isGlobal: true,
