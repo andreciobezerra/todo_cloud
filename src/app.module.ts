@@ -6,6 +6,9 @@ import { AllExceptionsFilter } from "./errors/all-exceptions.filter";
 
 @Module({
   imports: [ConfigModule.forRoot(appConfig)],
-  providers: [{ provide: APP_FILTER, useClass: AllExceptionsFilter }],
+  providers: [{
+     provide: APP_FILTER, 
+     useClass: AllExceptionsFilter 
+   }],
 })
 export class AppModule {}
