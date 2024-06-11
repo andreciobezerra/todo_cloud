@@ -10,7 +10,7 @@ import { UserDataMiddleware } from "./users/middlewares/user-data.middleware";
 import { AuthModule } from "./auth/auth.module";
 
 @Module({
-  imports: [ConfigModule.forRoot(appConfig),AuthModule, DatabaseModule, UsersModule, TasksModule],
+  imports: [ConfigModule.forRoot(appConfig), AuthModule, DatabaseModule, UsersModule, TasksModule],
   providers: [{ provide: APP_FILTER, useClass: AllExceptionsFilter }],
 })
 export class AppModule implements NestModule {
