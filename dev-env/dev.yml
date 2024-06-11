@@ -11,7 +11,8 @@ services:
       database:
         condition: service_healthy
     build:
-      dockerfile: dev.Dockerfile
+      context: ../
+      dockerfile: dev-env/dev.Dockerfile
     ports:
       - "3666:3666"
     env_file: ./../dev-env/.env.development
