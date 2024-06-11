@@ -1,0 +1,43 @@
+version: "3.0"
+
+networks:
+  api-tier:
+    driver: bridge
+
+services:
+  api:
+    container_name: todo-cloud
+    depends_on:
+      database:
+        condition: service_healthy
+    build:
+      dockerfile: dev.Dockerfile
+    ports:
+      - "3666:3666"
+    env_file: ./../dev-env/.env.development
+    volumes:
+      - ./..:/app
+    command: npm run start:dev
+    networks:
+      - api-tier
+
+  database:
+    container_name: todo-cloud-db
+    image: postgres:14.2
+    expose:
+      - "5432"
+    ports:
+      - "5434:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: devpassword
+      POSTGRES_DB: devdb
+      LC_ALL: C
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 7s
+      timeout: 5s
+    volumes:
+      - ./pgdata/dev:/var/lib/postgresql/data
+    networks:
+      - api-tier
