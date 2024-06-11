@@ -1,66 +1,82 @@
-import { User } from "./entities/user.entity";
 import { Injectable } from "@nestjs/common";
-import { UUID, randomUUID } from "crypto";
-import { CreateUserDto } from "./dto/create-user.dto";
+import { DataSource, DeleteResult, QueryRunner } from "typeorm";
+import {
+  ICrudRepository,
+  PaginatedResult,
+} from "src/database/interfaces/crud-repository.interface";
+import { UUID } from "crypto";
 import { PER_PAGE } from "src/database/database.config";
-import { ICrudRepository } from "src/database/interfaces/crud-repository.interface";
-
-const usersDB = new Map<UUID, User>();
+import { User } from "./entities/user.entity";
 
 @Injectable()
 export class UsersRepository implements ICrudRepository<User> {
-  create(payload: CreateUserDto): Promise<User> {
-    const id = randomUUID();
-    const userToSave = new User({ id, ...payload });
-    userToSave.createdAt = new Date();
+  queryRunner: QueryRunner;
 
-    return Promise.resolve(userToSave);
+  constructor(private readonly dataSource: DataSource) {
+    this.queryRunner = this.dataSource.createQueryRunner();
   }
 
-  findOne(id: UUID): Promise<User> {
-    return Promise.resolve(usersDB.get(id));
+  async create(payload: Omit<User, ("createdAt" | "updatedAt") | "id">): Promise<User | void> {
+    await this.queryRunner.connect();
+    await this.queryRunner.startTransaction();
+
+    return this.queryRunner.manager
+      .save(payload as User)
+      .catch((err) => {
+        this.queryRunner.rollbackTransaction();
+
+        throw err;
+      })
+      .finally(() => this.queryRunner.release());
   }
 
-  findAll(page?: number): Promise<User[]> {
-    const users = usersDB.values();
-    const paginatedResult = page
-      ? Array.from(users).slice(page * PER_PAGE, page * PER_PAGE + PER_PAGE)
-      : Array.from(users);
-
-    return Promise.resolve(paginatedResult);
+  findOneById(id: UUID): Promise<User> {
+    return this.dataSource.getRepository(User).createQueryBuilder("users").where({ id }).getOne();
   }
 
-  update(id: UUID, payload: Partial<User>): Promise<User> {
-    const user = usersDB.get(id);
+  async findAll(_, page?: number): Promise<PaginatedResult<User>> {
+    const [data, total] = page
+      ? await this.dataSource
+          .getRepository(User)
+          .createQueryBuilder("users")
+          .skip(PER_PAGE * page)
+          .take(PER_PAGE)
+          .getManyAndCount()
+      : await this.dataSource.getRepository(User).createQueryBuilder("users").getManyAndCount();
 
-    if (!user) {
-      return null;
-    }
-
-    const updatedUser = {
-      ...user,
-      ...payload,
-      updatedAt: new Date(),
-    };
-
-    usersDB.set(id, updatedUser);
-
-    return Promise.resolve(updatedUser);
+    return { data, total, page };
   }
 
-  delete(id: UUID): Promise<User> {
-    const user = usersDB.get(id);
+  async update(id: UUID, payload: Partial<User>): Promise<User> {
+    await this.queryRunner.connect();
+    await this.queryRunner.startTransaction();
 
-    if (!user) {
-      return null;
-    }
+    return this.queryRunner.manager
+      .update(User, { id }, payload as User)
+      .then(() => this.findOneById(id))
+      .catch((err) => {
+        this.queryRunner.rollbackTransaction();
 
-    usersDB.delete(id);
-
-    return Promise.resolve(user);
+        throw err;
+      })
+      .finally(() => this.queryRunner.release());
   }
 
-  emailInUse(email: string): boolean {
-    return Array.from(usersDB.values()).some((user: User) => user.email == email);
+  async delete(id: UUID): Promise<DeleteResult> {
+    await this.queryRunner.connect();
+    await this.queryRunner.startTransaction();
+
+    return this.queryRunner.manager
+      .delete(User, { id })
+      .catch((err) => {
+        this.queryRunner.rollbackTransaction();
+
+        throw err;
+      })
+      .finally(() => this.queryRunner.release());
+  }
+
+  async find(options: Partial<User>) {
+    return this.dataSource.getRepository(User).createQueryBuilder("users").where(options).getMany();
   }
 }

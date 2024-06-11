@@ -7,38 +7,34 @@ import { User } from "./entities/user.entity";
 import { UUID } from "crypto";
 import * as bcrypt from "bcrypt";
 
-interface IUsersRepository extends ICrudRepository<User> {
-  emailInUse(email: string): boolean;
+interface IUserRepository extends ICrudRepository<User> {
+  find(partial: Partial<User>): Promise<Array<User>>;
 }
 
 @Injectable()
 export class UsersService {
-  private readonly usersRepository: IUsersRepository;
+  private readonly usersRepository: IUserRepository;
 
   constructor(usersRepository: UsersRepository) {
     this.usersRepository = usersRepository;
   }
 
   async create(createUserDto: CreateUserDto) {
-    if (this.usersRepository.emailInUse) {
-      throw new NotFoundException({ message: "Email already in use" });
-    }
-
     createUserDto.password = await bcrypt.hash(createUserDto.password, 10);
 
     try {
-      return await this.usersRepository.create(createUserDto);
+      return await this.usersRepository.create({ tasks: [], ...createUserDto });
     } catch (err) {
       throw new InternalServerErrorException({ message: err.message ?? "Internal error" });
     }
   }
 
   findAll(page?: number) {
-    return this.usersRepository.findAll(page);
+    return this.usersRepository.findAll(null, page);
   }
 
   async findOne(id: UUID) {
-    const user = await this.usersRepository.findOne(id);
+    const user = await this.usersRepository.findOneById(id);
 
     if (!user) {
       throw new NotFoundException({ message: "User not found" });
@@ -47,10 +43,14 @@ export class UsersService {
     return user;
   }
 
+  find(options: Partial<User>) {
+    return this.usersRepository.find(options);
+  }
+
   async update(id: UUID, updateUserDto: UpdateUserDto) {
     const user = await this.usersRepository.update(id, updateUserDto);
 
-   if (!user) {
+    if (!user) {
       throw new NotFoundException({ message: "User not found" });
     }
 
