@@ -10,10 +10,13 @@ import { validationConfig } from "./app.config";
 import { ValidationPipe } from "@nestjs/common";
 
 async function bootstrap() {
-  const app = await NestFactory.create<NestFastifyApplication>(AppModule, new FastifyAdapter());
+  const app = await NestFactory.create<NestFastifyApplication>(
+    AppModule,
+    new FastifyAdapter({ logger: process.env.NODE_ENV === "development" }),
+  );
 
   // security configs.
-  app.enableCors();
+  app.enableCors({ credentials: true });
   app.register(fastifyHelmet);
   app.register(fastifyCsrfProtection);
 
