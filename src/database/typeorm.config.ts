@@ -17,7 +17,7 @@ export const typeormConfig: TypeOrmModuleAsyncOptions = {
       username: configService.get("DB_USER"),
       password: configService.get("DB_PASSWORD"),
       database: configService.get("DB_NAME"),
-      autoLoadEntities: true,
+      // autoLoadEntities: true,
       entities: [__dirname.concat("/../**/*.entity{.ts,.js}")],
     };
   },
@@ -75,12 +75,12 @@ export const typeormTestsConfig: TypeOrmModuleAsyncOptions = {
   },
 };
 
-config({ path: ".env.development" });
+config({ path: "dev-env/.env.development" });
 
 const dataSourceOptions: DataSourceOptions = {
   type: "postgres",
-  host: "localhost",
-  port: process.env.NODE_ENV === "development" ? 5234 : Number(process.env.DB_PORT),
+  host: process.env.DB_HOST,
+  port: Number(process.env.DB_PORT),
   username: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
