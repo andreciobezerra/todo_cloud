@@ -1,5 +1,5 @@
 import { UUID } from "crypto";
-import { User } from "src/users/entities/user.entity";
+import { User } from "../../users/entities/user.entity";
 import {
   Column,
   CreateDateColumn,
@@ -24,23 +24,23 @@ export class Task {
   @Column({ type: "text" })
   description: string;
 
-  @Column({ type: "timestamp without time zone" })
+  @Column({ type: "timestamp without time zone", nullable: true })
   dueDate: Date;
 
-  @Column({ type: "bool" })
+  @Column({ type: "bool", default: false })
   completed: boolean;
 
-  @Column({ type: "varchar", length: 36 })
+  @Column({ type: "varchar", length: 36, nullable: true })
   priotity: TaskPriority;
 
-  @Column({ type: "float" })
+  @Column({ type: "float", nullable: true })
   evaluation: number;
 
   @ManyToOne(() => User)
   @JoinColumn()
   user: User;
 
-  @ManyToMany(() => TaskCategory, (category) => category.tasks, { cascade: true })
+  @ManyToMany(() => TaskCategory, { cascade: true, nullable: true })
   @JoinTable()
   categories: Array<TaskCategory>;
 
@@ -49,6 +49,10 @@ export class Task {
 
   @UpdateDateColumn({ type: "timestamp without time zone" })
   updatedAt?: Date;
+
+  constructor(partial: Partial<Task>) {
+    Object.assign(this, partial);
+  }
 }
 
 export enum TaskPriority {

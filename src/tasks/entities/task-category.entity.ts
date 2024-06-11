@@ -3,11 +3,9 @@ import {
   Column,
   CreateDateColumn,
   Entity,
-  ManyToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
-import { Task } from "./task.entity";
 
 export type Category = "home" | "work" | "personal" | "shopping";
 
@@ -18,9 +16,6 @@ export class TaskCategory {
 
   @Column({ type: "varchar", length: "64", unique: true })
   title: Category;
-
-  @ManyToMany(() => Task, (task) => task.categories)
-  tasks: Array<Task>;
 
   @CreateDateColumn({ type: "timestamp without time zone" })
   public createdAt: Date;
