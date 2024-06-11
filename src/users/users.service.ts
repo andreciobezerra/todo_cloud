@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, InternalServerErrorException, NotFoundException } from "@nestjs/common";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
 import { UsersRepository } from "./users.repository";
@@ -21,7 +21,7 @@ export class UsersService {
 
   async create(createUserDto: CreateUserDto) {
     if (this.usersRepository.emailInUse) {
-      throw new Error("Email already in use"); //TODO
+      throw new NotFoundException({ message: "Email already in use" });
     }
 
     createUserDto.password = await bcrypt.hash(createUserDto.password, 10);
@@ -29,7 +29,7 @@ export class UsersService {
     try {
       return await this.usersRepository.create(createUserDto);
     } catch (err) {
-      console.log(err); //TODO
+      throw new InternalServerErrorException({ message: err.message ?? "Internal error" });
     }
   }
 
@@ -41,7 +41,7 @@ export class UsersService {
     const user = await this.usersRepository.findOne(id);
 
     if (!user) {
-      throw new Error("User not found"); //TODO
+      throw new NotFoundException({ message: "User not found" });
     }
 
     return user;
@@ -50,8 +50,8 @@ export class UsersService {
   async update(id: UUID, updateUserDto: UpdateUserDto) {
     const user = await this.usersRepository.update(id, updateUserDto);
 
-    if (!user) {
-      throw new Error("User not found"); //TODO
+   if (!user) {
+      throw new NotFoundException({ message: "User not found" });
     }
 
     return user;
@@ -61,7 +61,7 @@ export class UsersService {
     const user = await this.usersRepository.delete(id);
 
     if (!user) {
-      throw new Error("User not found"); //TODO
+      throw new NotFoundException({ message: "User not found" });
     }
 
     return user;

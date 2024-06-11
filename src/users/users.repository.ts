@@ -11,7 +11,7 @@ const usersDB = new Map<UUID, User>();
 export class UsersRepository implements ICrudRepository<User> {
   create(payload: CreateUserDto): Promise<User> {
     const id = randomUUID();
-    const userToSave = new User(id, payload.name, payload.email, payload.password);
+    const userToSave = new User({ id, ...payload });
     userToSave.createdAt = new Date();
 
     return Promise.resolve(userToSave);
