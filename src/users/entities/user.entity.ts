@@ -33,4 +33,8 @@ export class User {
 
   @OneToMany(() => Task, (task) => task.user, { cascade: true })
   tasks: Array<Task>;
+
+  constructor(partial: Partial<User>) {
+    Object.assign(this, partial);
+  }
 }

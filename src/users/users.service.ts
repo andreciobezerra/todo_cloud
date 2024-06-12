@@ -1,4 +1,9 @@
-import { Injectable, InternalServerErrorException, NotFoundException } from "@nestjs/common";
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from "@nestjs/common";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
 import { UsersRepository } from "./users.repository";
@@ -9,6 +14,7 @@ import * as bcrypt from "bcrypt";
 
 interface IUserRepository extends ICrudRepository<User> {
   find(partial: Partial<User>): Promise<Array<User>>;
+  emailInUse(email: string): Promise<boolean>;
 }
 
 @Injectable()
@@ -20,10 +26,16 @@ export class UsersService {
   }
 
   async create(createUserDto: CreateUserDto) {
+    const emailInUse = await this.usersRepository.emailInUse(createUserDto.email);
+
+    if (emailInUse) {
+      throw new BadRequestException("Email already in use");
+    }
+
     createUserDto.password = await bcrypt.hash(createUserDto.password, 10);
 
     try {
-      return await this.usersRepository.create({ tasks: [], ...createUserDto });
+      return await this.usersRepository.create(new User({ tasks: [], ...createUserDto }));
     } catch (err) {
       throw new InternalServerErrorException({ message: err.message ?? "Internal error" });
     }

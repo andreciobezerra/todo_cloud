@@ -16,6 +16,7 @@ import { UsersService } from "./users.service";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
 import { UUID } from "crypto";
+import { IsPublic } from "src/auth/is-public.decorator";
 
 @Controller("users")
 @UseInterceptors(ClassSerializerInterceptor)
@@ -23,12 +24,13 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Post()
+  @IsPublic()
   create(@Body() createUserDto: CreateUserDto) {
     return this.usersService.create(createUserDto);
   }
 
   @Get()
-  findAll(@Query("page", new ParseIntPipe()) page?: number) {
+  findAll(@Query("page", new ParseIntPipe({ optional: true })) page?: number) {
     return this.usersService.findAll(page);
   }
 
