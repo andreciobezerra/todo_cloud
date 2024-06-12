@@ -2,7 +2,7 @@ import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from
 import { ConfigService } from "@nestjs/config";
 import { Reflector } from "@nestjs/core";
 import { JwtService } from "@nestjs/jwt";
-import { IS_PUBLIC_KEY } from "./is-public.decorator";
+import { IS_PUBLIC_KEY } from "../is-public.decorator";
 
 @Injectable()
 export class CookieAuthGuard implements CanActivate {
