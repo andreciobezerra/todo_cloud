@@ -7,7 +7,7 @@ import { UsersModule } from "./users/users.module";
 import { TasksModule } from "./tasks/tasks.module";
 import { DatabaseModule } from "./database/database.module";
 import { AuthModule } from "./auth/auth.module";
-import { CookieAuthGuard } from "./auth/cookie-auth.guard";
+import { CookieAuthGuard } from "./auth/guards/cookie-auth.guard";
 
 @Module({
   imports: [ConfigModule.forRoot(appConfig), AuthModule, DatabaseModule, UsersModule, TasksModule],
