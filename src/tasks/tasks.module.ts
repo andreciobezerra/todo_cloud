@@ -8,7 +8,8 @@ import { UsersModule } from "src/users/users.module";
 
 @Module({
   imports: [TypeOrmModule.forFeature([Task]), UsersModule],
-  controllers: [TasksController],
   providers: [TasksService, TaskRepository],
+  controllers: [TasksController],
+  exports: [TasksService],
 })
 export class TasksModule {}

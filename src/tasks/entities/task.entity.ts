@@ -5,13 +5,10 @@ import {
   CreateDateColumn,
   Entity,
   JoinColumn,
-  JoinTable,
-  ManyToMany,
   ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
-import { TaskCategory } from "./task-category.entity";
 
 @Entity()
 export class Task {
@@ -31,7 +28,7 @@ export class Task {
   completed: boolean;
 
   @Column({ type: "varchar", length: 36, nullable: true })
-  priotity: TaskPriority;
+  priority: TaskPriority;
 
   @Column({ type: "float", nullable: true })
   evaluation: number;
@@ -40,8 +37,7 @@ export class Task {
   @JoinColumn()
   user: User;
 
-  @ManyToMany(() => TaskCategory, { cascade: true, nullable: true })
-  @JoinTable()
+  @Column({ type: "text", array: true, default: [] })
   categories: Array<TaskCategory>;
 
   @CreateDateColumn({ type: "timestamp without time zone" })
@@ -60,4 +56,11 @@ export enum TaskPriority {
   NORMAL = "normal",
   HIGH = "high",
   CIRTICAL = "critical",
+}
+
+export enum TaskCategory {
+  HOME = "home",
+  WORK = "work",
+  PERSONAL = "personal",
+  SHOPPING = "shopping",
 }
