@@ -1,23 +1,19 @@
-import { MiddlewareConsumer, Module, NestModule, RequestMethod } from "@nestjs/common";
+import { Module } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
 import { appConfig } from "./app.config";
-import { APP_FILTER } from "@nestjs/core";
+import { APP_FILTER, APP_GUARD } from "@nestjs/core";
 import { AllExceptionsFilter } from "./errors/all-exceptions.filter";
 import { UsersModule } from "./users/users.module";
 import { TasksModule } from "./tasks/tasks.module";
 import { DatabaseModule } from "./database/database.module";
-import { UserDataMiddleware } from "./users/middlewares/user-data.middleware";
 import { AuthModule } from "./auth/auth.module";
+import { CookieAuthGuard } from "./auth/cookie-auth.guard";
 
 @Module({
   imports: [ConfigModule.forRoot(appConfig), AuthModule, DatabaseModule, UsersModule, TasksModule],
-  providers: [{ provide: APP_FILTER, useClass: AllExceptionsFilter }],
+  providers: [
+    { provide: APP_FILTER, useClass: AllExceptionsFilter },
+    { provide: APP_GUARD, useClass: CookieAuthGuard },
+  ],
 })
-export class AppModule implements NestModule {
-  configure(consumer: MiddlewareConsumer) {
-    consumer
-      .apply(UserDataMiddleware)
-      .exclude("auth/login", { path: "users", method: RequestMethod.POST })
-      .forRoutes("*");
-  }
-}
+export class AppModule {}

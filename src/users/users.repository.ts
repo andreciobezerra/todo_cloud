@@ -20,14 +20,17 @@ export class UsersRepository implements ICrudRepository<User> {
     await this.queryRunner.connect();
     await this.queryRunner.startTransaction();
 
-    return this.queryRunner.manager
-      .save(payload as User)
-      .catch((err) => {
-        this.queryRunner.rollbackTransaction();
+    try {
+      const newUser = await this.queryRunner.manager.save(payload as User);
 
-        throw err;
-      })
-      .finally(() => this.queryRunner.release());
+      await this.queryRunner.commitTransaction();
+
+      return newUser;
+    } catch (err) {
+      await this.queryRunner.rollbackTransaction();
+
+      throw err;
+    }
   }
 
   findOneById(id: UUID): Promise<User> {
@@ -51,15 +54,16 @@ export class UsersRepository implements ICrudRepository<User> {
     await this.queryRunner.connect();
     await this.queryRunner.startTransaction();
 
-    return this.queryRunner.manager
-      .update(User, { id }, payload as User)
-      .then(() => this.findOneById(id))
-      .catch((err) => {
-        this.queryRunner.rollbackTransaction();
+    try {
+      await this.queryRunner.manager.update(User, { id }, payload as User);
+      await this.queryRunner.commitTransaction();
 
-        throw err;
-      })
-      .finally(() => this.queryRunner.release());
+      return this.findOneById(id);
+    } catch (err) {
+      this.queryRunner.rollbackTransaction();
+
+      throw err;
+    }
   }
 
   async delete(id: UUID): Promise<DeleteResult> {
@@ -78,5 +82,13 @@ export class UsersRepository implements ICrudRepository<User> {
 
   async find(options: Partial<User>) {
     return this.dataSource.getRepository(User).createQueryBuilder("users").where(options).getMany();
+  }
+
+  async emailInUse(email: string): Promise<boolean> {
+    return this.dataSource
+      .getRepository(User)
+      .createQueryBuilder("users")
+      .where({ email })
+      .getExists();
   }
 }

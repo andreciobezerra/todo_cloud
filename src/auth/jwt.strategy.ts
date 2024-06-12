@@ -9,7 +9,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([JwtStrategy.extractJWT]),
       secretOrKey: configService.get("JWT_SECRET"),
-      ignoreExpiration: process.env.NODE_ENV == "developmen",
+      ignoreExpiration: process.env.NODE_ENV == "development",
     });
   }
 
@@ -18,6 +18,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   private static extractJWT(@Req() req: any) {
-    return req.cookies["auth-cookie"];
+    return req.cookies.authCookie;
   }
 }

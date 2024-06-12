@@ -1,6 +1,8 @@
 import { Body, Controller, HttpCode, Post, Res } from "@nestjs/common";
 import { LoginDto } from "./dto/login.dto";
 import { AuthService } from "./auth.service";
+import { FastifyReply } from "fastify";
+import { IsPublic } from "./is-public.decorator";
 
 const ONE_DAY_MILISECONDS = 24 * 60 * 60 * 1000;
 
@@ -10,15 +12,20 @@ export class AuthController {
 
   @Post("login")
   @HttpCode(204)
-  async login(@Body() loginDto: LoginDto, @Res() res: any) {
+  @IsPublic()
+  async login(@Body() loginDto: LoginDto, @Res({ passthrough: true }) res: FastifyReply) {
     const token = await this.authService.login(loginDto);
 
-    res.cookie("authCookie", token, { httpOnly: true, expires: ONE_DAY_MILISECONDS });
+    res.setCookie("authCookie", token, {
+      httpOnly: true,
+      path: "/",
+      expires: new Date(Date.now() + ONE_DAY_MILISECONDS),
+    });
   }
 
   @Post("logout")
-  @HttpCode(200)
-  logout(@Res() res: any) {
-    res.cookie("authCookie", null);
+  @HttpCode(204)
+  logout(@Res({ passthrough: true }) res: FastifyReply) {
+    res.clearCookie("authCookie");
   }
 }
