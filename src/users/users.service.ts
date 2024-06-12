@@ -11,6 +11,7 @@ import { ICrudRepository } from "src/database/interfaces/crud-repository.interfa
 import { User } from "./entities/user.entity";
 import { UUID } from "crypto";
 import * as bcrypt from "bcrypt";
+import { DeleteResult } from "typeorm";
 
 interface IUserRepository extends ICrudRepository<User> {
   find(partial: Partial<User>): Promise<Array<User>>;
@@ -42,7 +43,7 @@ export class UsersService {
   }
 
   findAll(page?: number) {
-    return this.usersRepository.findAll(null, page);
+    return this.usersRepository.findAll(page);
   }
 
   async findOne(id: UUID) {
@@ -70,12 +71,12 @@ export class UsersService {
   }
 
   async remove(id: UUID) {
-    const user = await this.usersRepository.delete(id);
+    const isDeleted = (await this.usersRepository.delete(id)) as DeleteResult;
 
-    if (!user) {
-      throw new NotFoundException({ message: "User not found" });
+    if (!isDeleted.affected) {
+      throw new NotFoundException("Task not found");
     }
 
-    return user;
+    return true;
   }
 }

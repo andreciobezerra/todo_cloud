@@ -37,15 +37,20 @@ export class UsersRepository implements ICrudRepository<User> {
     return this.dataSource.getRepository(User).createQueryBuilder("users").where({ id }).getOne();
   }
 
-  async findAll(_, page?: number): Promise<PaginatedResult<User>> {
+  async findAll(page?: number): Promise<PaginatedResult<User>> {
     const [data, total] = page
       ? await this.dataSource
           .getRepository(User)
           .createQueryBuilder("users")
           .skip(PER_PAGE * page)
           .take(PER_PAGE)
+          .leftJoinAndSelect("users.tasks", "task")
           .getManyAndCount()
-      : await this.dataSource.getRepository(User).createQueryBuilder("users").getManyAndCount();
+      : await this.dataSource
+          .getRepository(User)
+          .createQueryBuilder("users")
+          .leftJoinAndSelect("users.tasks", "task")
+          .getManyAndCount();
 
     return { data, total, page };
   }
@@ -70,14 +75,16 @@ export class UsersRepository implements ICrudRepository<User> {
     await this.queryRunner.connect();
     await this.queryRunner.startTransaction();
 
-    return this.queryRunner.manager
-      .delete(User, { id })
-      .catch((err) => {
-        this.queryRunner.rollbackTransaction();
+    try {
+      const result = await this.queryRunner.manager.delete(User, { id });
+      await this.queryRunner.commitTransaction();
 
-        throw err;
-      })
-      .finally(() => this.queryRunner.release());
+      return result;
+    } catch (err) {
+      await this.queryRunner.rollbackTransaction();
+
+      throw err;
+    }
   }
 
   async find(options: Partial<User>) {
